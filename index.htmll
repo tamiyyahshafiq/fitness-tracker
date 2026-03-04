@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Fitness Tracker</title>
+  <link rel="stylesheet" href="styles.css" />
+  <!-- Chart.js CDN (safe for GitHub Pages static sites) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <header class="wrap">
+    <h1>Fitness Tracker</h1>
+    <p class="sub">Log workouts, auto-populate home/gym plans, track goals, and visualize progress.</p>
+
+    <nav class="tabs">
+      <button class="tab active" data-tab="log">Log</button>
+      <button class="tab" data-tab="dashboard">Dashboard</button>
+      <button class="tab" data-tab="guides">Guides</button>
+      <button class="tab" data-tab="weekly">Weekly Plan</button>
+    </nav>
+  </header>
+
+  <main class="wrap">
+    <!-- LOG TAB -->
+    <section id="tab-log" class="tabPanel active">
+      <div class="grid">
+        <section class="card">
+          <h2>New Session</h2>
+
+          <div class="row">
+            <label>Date
+              <input id="date" type="date" />
+            </label>
+
+            <label>Location
+              <select id="location">
+                <option value="gym">Gym</option>
+                <option value="home">Home</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="row">
+            <label>Workout Type
+              <select id="workoutType">
+                <option value="lower">Lower Body + Core</option>
+                <option value="upper">Upper Body (Pull-up focus)</option>
+                <option value="full">Full Body Strength</option>
+                <option value="run_easy">Run — Easy</option>
+                <option value="run_intervals">Run — Intervals</option>
+                <option value="swim">Swim</option>
+                <option value="core">Core Only</option>
+                <option value="mobility">Mobility / Recovery</option>
+              </select>
+            </label>
+
+            <button id="populate" class="btn">Auto-populate</button>
+          </div>
+
+          <div class="toolbar">
+            <button id="addRow" class="btn secondary">+ Add Exercise</button>
+            <button id="clearRows" class="btn danger">Clear Table</button>
+          </div>
+
+          <div class="tableWrap">
+            <table id="exerciseTable">
+              <thead>
+                <tr>
+                  <th>Exercise / Activity</th>
+                  <th>Set 1</th>
+                  <th>Set 2</th>
+                  <th>Set 3</th>
+                  <th>Set 4</th>
+                  <th>Weight / Pace</th>
+                  <th>Time / Distance</th>
+                  <th>Effort (1–10)</th>
+                  <th>Notes</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="tbody"></tbody>
+            </table>
+          </div>
+
+          <div class="row">
+            <label>Session Notes
+              <input id="sessionNotes" type="text" placeholder="How it felt, wins, pain/notes, etc." />
+            </label>
+          </div>
+
+          <div class="toolbar">
+            <button id="saveSession" class="btn">Save Session</button>
+            <button id="resetForm" class="btn secondary">Reset</button>
+          </div>
+
+          <p class="sub small">
+            Tip: For strength rows, put reps in Set columns. For runs/swims, leave sets blank and fill Time/Distance.
+          </p>
+        </section>
+
+        <section class="card">
+          <h2>Saved Sessions</h2>
+
+          <div class="toolbar">
+            <button id="exportData" class="btn secondary">Export JSON</button>
+            <label class="fileBtn">
+              Import JSON
+              <input id="importData" type="file" accept="application/json" />
+            </label>
+            <button id="wipeAll" class="btn danger">Wipe All</button>
+          </div>
+
+          <div id="sessionsList" class="list"></div>
+        </section>
+      </div>
+    </section>
+
+    <!-- DASHBOARD TAB -->
+    <section id="tab-dashboard" class="tabPanel">
+      <div class="grid">
+        <section class="card">
+          <h2>Goals</h2>
+
+          <div class="row">
+            <label>Goal: Pushups
+              <input id="goalPushups" type="number" min="0" step="1" />
+            </label>
+            <label>Goal: Pull-ups
+              <input id="goalPullups" type="number" min="0" step="1" />
+            </label>
+          </div>
+
+          <div class="row">
+            <label>Goal: Mile time (mm:ss)
+              <input id="goalMile" type="text" placeholder="8:00" />
+            </label>
+            <label>Wedding date (optional)
+              <input id="goalDate" type="date" />
+            </label>
+          </div>
+
+          <div class="toolbar">
+            <button id="saveGoals" class="btn">Save Goals</button>
+            <button id="resetGoals" class="btn secondary">Reset Goals</button>
+          </div>
+
+          <div class="kpis">
+            <div class="kpi">
+              <div class="kpiLabel">Best Pushups (logged)</div>
+              <div class="kpiValue" id="kpiPushups">—</div>
+            </div>
+            <div class="kpi">
+              <div class="kpiLabel">Best Pull-up Assist (lower is better)</div>
+              <div class="kpiValue" id="kpiPullAssist">—</div>
+            </div>
+            <div class="kpi">
+              <div class="kpiLabel">Best Mile Time</div>
+              <div class="kpiValue" id="kpiMile">—</div>
+            </div>
+          </div>
+
+          <p class="sub small">
+            For pull-ups: log a row named <b>Assisted Pull-Up Machine</b> and put something like <b>60</b> in “Weight/Pace” for assistance.
+            For mile: log a row named <b>Mile</b> and put time like <b>7:45</b> in Time/Distance.
+            For pushups: log a row named <b>Pushups</b> (or Incline Pushups) and reps in Set columns.
+          </p>
+        </section>
+
+        <section class="card">
+          <h2>Charts</h2>
+
+          <div class="chartBlock">
+            <h3>Pushups over time (best set per day)</h3>
+            <canvas id="chartPushups"></canvas>
+          </div>
+
+          <div class="chartBlock">
+            <h3>Pull-up assistance over time (lower is better)</h3>
+            <canvas id="chartPullAssist"></canvas>
+          </div>
+
+          <div class="chartBlock">
+            <h3>Mile time over time (lower is better)</h3>
+            <canvas id="chartMile"></canvas>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <!-- GUIDES TAB -->
+    <section id="tab-guides" class="tabPanel">
+      <section class="card">
+        <h2>Exercise Guides (Form + mistakes)</h2>
+        <div id="guidesContent" class="guides"></div>
+      </section>
+    </section>
+
+    <!-- WEEKLY TAB -->
+    <section id="tab-weekly" class="tabPanel">
+      <section class="card">
+        <h2>Your Weekly Structure</h2>
+        <div id="weeklyContent" class="guides"></div>
+      </section>
+    </section>
+  </main>
+
+  <footer class="wrap foot">
+    <small>Everything saves in your browser (localStorage). Export JSON to back up or move devices.</small>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
